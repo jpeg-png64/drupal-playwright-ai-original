@@ -1,0 +1,21 @@
+{
+  "name": "drupal-playwright-ai",
+  "version": "1.0.0",
+  "description": "AI generated Playwright tests for Drupal",
+  "scripts": {
+    "test": "playwright test",
+    "test:parallel": "playwright test --project=parallel",
+    "test:solo": "playwright test --project=solo",
+    "test:combined": "playwright test --project=combined",
+    "test:spec": "playwright test tests/$npm_config_spec.spec.js",
+    "test:name": "playwright test -g \"$npm_config_name\"",
+    "report": "open test-results/html-report/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}
