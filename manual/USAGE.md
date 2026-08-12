@@ -14,7 +14,7 @@ This project runs Playwright E2E tests against a Drupal site with custom blocks.
 4. Publishes the page
 5. Verifies the frontend
 
-There are **32 tests across 19 spec files**, covering 15 block types. Every test creates one Drupal page.
+There are **32 tests across 19 spec files**, covering 16 block types. Each test creates a Drupal page (Next/Previous also creates two small link-target pages so its autocomplete has nodes to find).
 
 ---
 
@@ -23,7 +23,7 @@ There are **32 tests across 19 spec files**, covering 15 block types. Every test
 - **Node.js 18+** (this project's Node is at `/usr/local/bin/node`)
 - **Docker** running the Drupal site at `../Docker/mtpc_template`
 - **Drupal site** reachable at `http://localhost:8325`
-- `drush` available inside the Drupal container (used for login)
+- **A Drupal login link** (each user has their own — a new user gets a new link; no `drush uli`)
 
 ---
 
@@ -34,7 +34,10 @@ npm install
 npx playwright install
 ```
 
-That's it. Login is handled automatically via `drush uli` (one-time link), cached in `.auth/storage-state.json`.
+That's it. Login uses the **provided login link** — not `drush uli`. Open the given
+link once in a browser to establish the Drupal session; it's cached in
+`.auth/storage-state.json` and reused by every test. A new user with a new link?
+Open their link to re-capture the session, then run the same tests unchanged.
 
 > **Node note:** If `npx` is not found, prefix commands with `PATH="/usr/local/bin:$PATH"`.
 
@@ -124,8 +127,8 @@ test("Default", async ({ page }) => { ... });  // no tag → 2 workers
 
 ## 6. Adding a New Test
 
-1. Read the block doc: `../docs/<block>.md`
-2. Read the block profile: `../docs/block-profiles/<block>.md`
+1. Read the block profile: `../docs/block-profiles/<block>.md`
+2. Read the test inputs: `../docs/test-inputs/<block>.md`
 3. Read the helper source: `helpers/<block>.js` — **always check the signature before calling**
 4. Create spec: `tests/<block>.spec.js`
 5. Follow the standard structure:
@@ -144,6 +147,7 @@ test.describe("Video Block", () => {
     });
     await test.step("Create Standard Page", async () => {
       await page.goto("/node/add/custom_page/mtpc");
+      await page.waitForLoadState("networkidle");
       await page
         .getByRole("textbox", { name: "Page Title" })
         .fill("Video Page");
@@ -163,6 +167,10 @@ test.describe("Video Block", () => {
     });
     await test.step("Publish Page", async () => {
       await page.getByRole("button", { name: "Publish Page" }).click();
+      await page.waitForURL(
+        (url) => !url.pathname.includes("/node/add"),
+        { timeout: 120000 },
+      );
     });
     await test.step("Verify Frontend", async () => {
       await expect(
@@ -210,7 +218,7 @@ On failure, screenshots, traces, and error context are saved to `test-results/ar
 
 ---
 
-## 7. Updating Test Inputs (markdown → spec sync)
+## 8. Updating Test Inputs (markdown → spec sync)
 
 The exact inputs for every test are documented in `docs/test-inputs/<block>.md` (see `docs/test-inputs/INDEX.md` for the block-to-file map). These files are the human-readable contract for what each test does.
 
@@ -224,12 +232,12 @@ No other step is needed — the input files are kept in sync with the specs, so 
 
 ---
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 | Symptom                  | Cause / Fix                                                                             |
 | ------------------------ | --------------------------------------------------------------------------------------- |
 | `npx: command not found` | Prefix with `PATH="/usr/local/bin:$PATH"`                                               |
-| Login fails              | `.auth/storage-state.json` expired — delete it and re-run (global setup regenerates it) |
+| Login fails              | `.auth/storage-state.json` expired — delete it and re-capture the session with your login link |
 | Drupal unreachable       | Check Docker: the site must be up at `http://localhost:8325`                            |
 | Media modal test flaky   | Make sure it's tagged `@media-modal` so it runs at 1 worker                             |
 | Multi-block page flaky   | Make sure it's tagged `@combined` (single section, 1 worker)                            |
@@ -237,7 +245,7 @@ No other step is needed — the input files are kept in sync with the specs, so 
 
 ---
 
-## 9. Key Files
+## 10. Key Files
 
 | File                   | Purpose                                                                                |
 | ---------------------- | -------------------------------------------------------------------------------------- |

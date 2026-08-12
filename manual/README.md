@@ -1,6 +1,6 @@
 # Drupal Playwright Automation
 
-Playwright E2E tests for 15 Drupal custom blocks (32 tests across 19 spec files). Generated and maintained with AI assistance.
+Playwright E2E tests for 16 Drupal custom blocks (32 tests across 19 spec files). Generated and maintained with AI assistance.
 
 ## TL;DR
 
@@ -18,7 +18,7 @@ test("Default", ...);                               // runs parallel (2 workers)
 
 - Node.js 18+
 - Docker (for Drupal at `../Docker/mtpc_template`)
-- `drush` available inside the Drupal container
+- A Drupal login link (each user/new user has their own — no `drush uli`)
 
 ```bash
 npm install
@@ -73,7 +73,6 @@ You can also update `docs/test-inputs/<block>.md` yourself and ask the agent to 
 ```
 .
 ├── docs/                    Block documentation (source of truth)
-│   ├── *.md                 One doc per block
 │   ├── block-profiles/      Quick-reference profiles per block
 │   ├── test-inputs/         Exact input values per test
 │   └── explore-new-site.md  Universal exploration workflow for new Drupal sites
@@ -81,12 +80,12 @@ You can also update `docs/test-inputs/<block>.md` yourself and ask the agent to 
 │   ├── <block>.js           One helper per block
 │   ├── collapse.js          Collapse block (4s wait)
 │   ├── fast-collapse.js     Collapse block (1.5s wait)
-│   ├── login.js             Login via drush uli
+│   ├── login.js             Login via the provided link
 │   ├── section.js           Add 1-col / 2-col sections
 │   └── ...
 ├── tests/                   Playwright spec files
-│   ├── <block>.spec.js      One spec per block (23 tests)
-│   ├── zz-all-blocks.spec.js All 15 blocks on one page (@combined, runs last)
+│   ├── <block>.spec.js      One spec per block (28 tests)
+│   ├── zz-all-blocks.spec.js All 16 blocks on one page (@combined, runs last)
 │   ├── stress-block-variety.spec.js  Many block types (@combined)
 │   ├── stress-content-volume.spec.js Large text and complex content (@combined)
 │   └── stress-size-extremes.spec.js  Boundary dimensions (@combined)
@@ -102,7 +101,7 @@ You can also update `docs/test-inputs/<block>.md` yourself and ask the agent to 
 |----------|-------|
 | URL | `http://localhost:8325` |
 | Content type | `/node/add/custom_page/mtpc` |
-| Login | `login(page)` helper (uses `drush uli`) |
+| Login | Provided login link (session cached in storage state; no `drush uli`) |
 | Title field | `getByRole("textbox", { name: "Page Title" })` |
 | Publish button | `getByRole("button", { name: "Publish Page" })` |
 
@@ -122,7 +121,7 @@ Every test follows the same flow:
 
 ## Individual Block Tests
 
-Each test creates one Drupal page with one or more blocks of its type. Total: **23 tests, 15 spec files**.
+Each test creates one Drupal page with one or more blocks of its type. Total: **28 tests, 15 spec files**.
 
 | Block | Spec | Tests | Tags | ~Runtime |
 |-------|------|-------|------|----------|
@@ -140,6 +139,7 @@ Each test creates one Drupal page with one or more blocks of its type. Total: **
 | Text Area | `text-area.spec.js` | 1 | — | 23s |
 | Three Column Carousel | `three-col-carousel.spec.js` | 1 | @media-modal | 44s |
 | Video | `video.spec.js` | 2 | Default, Autoplay | 54s |
+| Views | — | — | No dedicated spec — covered in `zz-all-blocks.spec.js` | — |
 | YouTube | `youtube.spec.js` | 1 | — | 22s |
 
 ## Combined Tests
@@ -148,12 +148,12 @@ Four tests that exercise multiple blocks on a single page. Total: **4 tests, 4 s
 
 | Test | Spec | Description | Tags | ~Runtime |
 |------|------|-------------|------|----------|
-| All blocks on one page | `zz-all-blocks.spec.js` | All 15 blocks on one page | @combined @media-modal | 114s |
+| All blocks on one page | `zz-all-blocks.spec.js` | All 16 blocks on one page | @combined @media-modal | 114s |
 | Many block types | `stress-block-variety.spec.js` | 18 blocks of mixed types | @combined | 120s |
 | Large text and content | `stress-content-volume.spec.js` | Large text and complex content | @combined | 120s |
 | Boundary dimensions | `stress-size-extremes.spec.js` | Boundary dimensions and limits | @combined | 120s |
 
-**Total: 32 tests, 19 spec files, 32 Drupal pages created.**
+**Total: 32 tests, 19 spec files.** (Individual tests also create small link-target pages for Next/Previous — 6 extra pages.)
 
 ## Helper Signatures
 
@@ -162,12 +162,12 @@ Four tests that exercise multiple blocks on a single page. Total: **4 tests, 4 s
 | Helper | Signature | Notes |
 |--------|-----------|-------|
 | `addAccordionBlock(page)` | No config | Opens CKEditor per item |
-| `addNextPreviousBlock(page, options?)` | `options = { bgColor?, linkColor?, borderColor?, bgHoverColor?, linkHoverColor?, borderHoverColor? }` | Colors as hex via evaluate |
+| `addNextPreviousBlock(page, options?)` | `options = { nextSearch?, prevSearch?, nextTitle?, prevTitle?, bgColor?, linkColor?, borderColor?, bgHoverColor?, linkHoverColor?, borderHoverColor? }` | Autocomplete links; `nextSearch`/`prevSearch` default `"Test Page"` / `"Test 2"` — pass terms for nodes you create |
 | `addSlideshowBlock(page, options?)` | `options = { autoplay?, infinite?, fade?, arrows?, adaptiveHeight?, cssClasses?, slideCount?, items?, media? }` — `media` = array of names/indexes per slide | Items default to 2 slides |
 | `addThreeColCarouselBlock(page, options?)` | `options = { media? }` — array of names/indexes per item | Creates 3 items with media |
 | `addPageTitleBlock(page, options?)` | `options = { title?, align?, position?, desktopHeight?, tabletHeight?, mobileHeight?, showBreadcrumbs?, overrideBreadcrumbs?, breadcrumbUrl?, breadcrumbText? }` | |
 | `addYoutubeBlock(page, width, height)` | Strings | Fills video ID directly |
-| `addProfileDetailsBlock(page)` | No params | |
+| `addProfileDetailsBlock(page, media?)` | `media?` = name/index of media item (omit to skip photo) | |
 | `addProfileListingBlock(page, layout?)` | `"one_col"` (default) or `"two_col"` | |
 
 ### Helpers requiring config
@@ -176,7 +176,7 @@ Four tests that exercise multiple blocks on a single page. Total: **4 tests, 4 s
 |--------|--------|
 | `addImageBlock(page, config)` | `{ captionBg, originalSize, align, target }` — all required; `media?` = name/index (default first item) |
 | `addVideoBlock(page, config)` | `{ url, width, height }` — `autoplay` optional (default `false`) |
-| `addImageGridBlock(page, option)` | `{ layout, hover, zoom, borderWidth, borderRadius, captionBg, link, target, caption, borderColor?, captionBgColor?, overlayBg?, overlayBgHover? }` — `media?` (main) and `mediaOverlay?` (overlay), default first item |
+| `addImageGridBlock(page, option)` | `{ layout, hover, zoom, borderWidth, borderRadius, captionBg, link, target, caption, borderColor?, captionBgColor?, captionTextColor?, captionTextHover? }` — `media?` (main) and `mediaOverlay?` (overlay), default first item |
 | `addEventCarouselBlock(page, config)` | `{ name, startDate, endDate, ongoingLabel?, activeEvent? }` — dates as `YYYY-MM-DD` |
 | `addIconTextHighlightBlock(page, options?)` | `{ highlightStyle, highlightDisplay, headingDisplay, iconTextStyle, tabletColumns, icon, text }` |
 | `addNavigationMenuBlock(page, menuName, desktopStyle, mobileStyle)` | Menu must exist in Drupal |
@@ -185,7 +185,7 @@ Four tests that exercise multiple blocks on a single page. Total: **4 tests, 4 s
 
 | Helper | Notes |
 |--------|-------|
-| `login(page)` | Generates one-time login link via `drush uli` |
+| `login(page)` | Logs in using the provided login link |
 | `addOneColumnSection(page, title?)` | Must call before adding blocks |
 | `collapseCurrentBlock(page)` | 4s wait after collapsing |
 | `fastCollapseCurrentBlock(page)` | 1.5s wait — used in combined tests |
@@ -261,13 +261,13 @@ Always collapse after configuring a block before adding the next one.
 
 ## Known Gotchas
 
-1. **Text Area helper** — Uses `.first()` on the column menu. Breaks in multi-block pages. Inline the code with `.last()` instead (see `tests/text-area.spec.js`).
+1. **Text Area helper** — Uses `.last()` on the column menu and CKEditor textbox, so it is multi-block safe. No inlining needed.
 
 2. **Image block requires all config fields** — `addImageBlock(page)` without config throws `TypeError`. Always pass `{ captionBg, originalSize, align, target }`.
 
 3. **Image Grid `_none` prefix** — Hover, zoom, and align use `_none` (underscore prefix), not `"none"`.
 
-4. **Slideshow** — Now accepts `options` for block-level settings (autoplay, infinite, fade, arrows, adaptiveHeight, cssClasses). Items are created via `addSlideshowItem(page, options?)` with link/target and 8 line styling fields.
+4. **Slideshow** — Now accepts `options` for block-level settings (autoplay, infinite, fade, arrows, adaptiveHeight, cssClasses). Items are created inside the helper — do NOT call a separate `addSlideshowItem`.
 
 5. **Multi-section selector conflicts** — Use a **single section** for all blocks in combined specs. Multiple sections cause selector ambiguity.
 
@@ -279,10 +279,14 @@ Always collapse after configuring a block before adding the next one.
 
 9. **Tag-based worker routing** — `playwright.config.js` defines three projects chained via `dependencies`. Untagged tests run parallel (2 workers, first); `@media-modal` tests run solo (1 worker); `@combined` tests run last (1 worker). A plain `npx playwright test` runs them sequentially, so heavy tests never collide.
 
+10. **Next / Previous link dependency** — The helper's autocomplete needs an existing node per search term. Defaults (`"Test Page"` / `"Test 2"`) only work if those titles exist; the spec creates its own target pages and passes them via `nextSearch` / `prevSearch`.
+
+11. **Image Grid overlay colors don't exist** — There are no overlay BG color fields. Use the caption **text** color fields (`captionTextColor` / `captionTextHover`) instead.
+
 ## Creating a New Test
 
-1. Read the block doc: `../docs/<block>.md`
-2. Read the block profile: `../docs/block-profiles/<block>.md`
+1. Read the block profile: `../docs/block-profiles/<block>.md`
+2. Read the test inputs: `../docs/test-inputs/<block>.md`
 3. Read the helper source: `helpers/<block>.js`
 4. Create spec: `tests/<block>.spec.js`
 5. Follow the test structure (login → page → section → block → publish → verify)

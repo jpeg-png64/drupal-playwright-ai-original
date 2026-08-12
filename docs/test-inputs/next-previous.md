@@ -2,15 +2,19 @@
 
 **Spec:** `tests/next-previous.spec.js` · **Helper:** `addNextPreviousBlock(page, options?)`
 
+Each test first creates two published link-target pages (e.g. "Next Target" / "Previous Target") so the autocomplete always resolves, then passes those titles via `nextSearch` / `prevSearch`.
+
 ## Test 1: Default
 
 - **Page title:** "Next Previous Test"
+- **Link targets:** "Next Target" / "Previous Target"
 - **Section:** "Nav Section"
-- `addNextPreviousBlock(page)` — no config; autocomplete fills next/prev links
+- `addNextPreviousBlock(page, { nextSearch: "Next Target", prevSearch: "Previous Target" })` — autocomplete fills next/prev links
 
 ## Test 2: All configurable fields (2 blocks)
 
 - **Page title:** "Next Previous Colors Test"
+- **Link targets:** "Next Target Colors" / "Previous Target Colors"
 - **Section:** "Color Section"
 
 ### Block 1 — custom labels + colors

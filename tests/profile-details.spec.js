@@ -36,6 +36,7 @@ test.describe("Profile Details Block", () => {
     await test.step("Verify Frontend", async () => {
       await expect(page.getByText("This is profile information created by Playwright.")).toBeVisible();
       await expect(page.getByText("This is picture information created by Playwright.")).toBeVisible();
+      await expect(page.locator(".media-library-item img")).toBeVisible();
     });
   });
 });

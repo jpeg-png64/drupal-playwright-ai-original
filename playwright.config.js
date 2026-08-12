@@ -1,5 +1,10 @@
 import { defineConfig } from "@playwright/test";
 
+const BASE_URL = process.env.BASE_URL;
+if (!BASE_URL) {
+  throw new Error('BASE_URL environment variable is required. Set BASE_URL to your Drupal site URL (e.g. BASE_URL="https://example.com"). The test runner will not default to localhost.');
+}
+
 export default defineConfig({
   testDir: "./tests",
 
@@ -25,13 +30,15 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: "http://localhost:8325",
-    headless: false,
+    baseURL: process.env.BASE_URL || "http://localhost:8325",
+    // Allow overriding headless via env (false by default for visibility)
+    headless: process.env.HEADLESS === "true" ? true : false,
     actionTimeout: 30000,
     navigationTimeout: 60000,
-    storageState: ".auth/storage-state.json",
-    screenshot: "only-on-failure",
-    trace: "retain-on-failure",
+    // Allow overriding storage state path for per-user sessions
+    storageState: process.env.STORAGE_STATE || ".auth/storage-state.json",
+    screenshot: process.env.SCREENSHOT || "only-on-failure",
+    trace: process.env.TRACE || "retain-on-failure",
   },
 
   projects: [

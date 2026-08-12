@@ -18,7 +18,8 @@ export async function addNextPreviousBlock(page, options = {}) {
   );
 
   await nextLink.click();
-  await nextLink.fill("Test Page");
+  await nextLink.fill(options.nextSearch || "Test Page");
+  await page.waitForTimeout(2000);
   await page.locator(".ui-autocomplete:visible li").first().click();
 
   const nextLabel = options.nextTitle || ">";
@@ -33,7 +34,8 @@ export async function addNextPreviousBlock(page, options = {}) {
   );
 
   await previousLink.click();
-  await previousLink.fill("Test 2");
+  await previousLink.fill(options.prevSearch || "Test 2");
+  await page.waitForTimeout(2000);
   await page.locator(".ui-autocomplete:visible li").first().click();
 
   const prevLabel = options.prevTitle || "<";
@@ -43,42 +45,25 @@ export async function addNextPreviousBlock(page, options = {}) {
     )
     .fill(prevLabel);
 
-  // Color fields — hidden inputs inside Drupal color field widgets, set via JS
+  // Color fields — hidden inputs inside Drupal color field widgets, set via JS.
+  // Use the LAST matching input so colors land on the correct block (profile gotcha 5).
 
-  if (options.bgColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_previous_bg"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.bgColor);
-  }
-  if (options.linkColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_previous_color"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.linkColor);
-  }
-  if (options.borderColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_previous_border"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.borderColor);
-  }
-  if (options.bgHoverColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_prev_bg_hvr"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.bgHoverColor);
-  }
-  if (options.linkHoverColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_prev_clr_hvr"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.linkHoverColor);
-  }
-  if (options.borderHoverColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_next_prev_brdr_hvr"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, options.borderHoverColor);
-  }
+  const setColor = async (nameFragment, value) => {
+    if (!value) return;
+    await page.evaluate(({ fragment, val }) => {
+      const els = document.querySelectorAll(`input[name*="${fragment}"]`);
+      const el = els[els.length - 1];
+      if (el) {
+        el.value = val;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }, { fragment: nameFragment, val: value });
+  };
+
+  await setColor("field_mtpc_next_previous_bg", options.bgColor);
+  await setColor("field_mtpc_next_previous_color", options.linkColor);
+  await setColor("field_mtpc_next_previous_border", options.borderColor);
+  await setColor("field_mtpc_next_prev_bg_hvr", options.bgHoverColor);
+  await setColor("field_mtpc_next_prev_clr_hvr", options.linkHoverColor);
+  await setColor("field_mtpc_next_prev_brdr_hvr", options.borderHoverColor);
 }

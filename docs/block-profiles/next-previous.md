@@ -31,14 +31,17 @@
 ## Gotchas
 1. Column menu Variant B — `[id^="...field-mod-1-col-container-add-more"]` (not `.last()`).
 2. Add button via `input[value]`, not `getByRole("button")` — `input[value*="Next"][value*="Previous"]`.
-3. Autocomplete for links — fill → wait `.ui-autocomplete:visible li` → click first.
+3. Autocomplete for links — fill → **wait ~2s for `.ui-autocomplete:visible li`** → click first. The helper already waits.
 4. Link fields use `data-drupal-selector`, not `name`.
 5. Color fields match partial `name` with `.last()`.
+6. **Dependency:** the autocomplete needs an existing node for each search term. Defaults are `"Test Page"` / `"Test 2"` — specs that do NOT create matching nodes must pass `nextSearch` / `prevSearch` pointing at nodes they created (e.g. the current test page). The helper's autocomplete works against published nodes; passing a search term for the page under test is the safest choice.
 
 ## Helper Signature
 ```javascript
 addNextPreviousBlock(page, options = {})
 // options (all optional):
+//   nextSearch         - Autocomplete search term for Next URI (default "Test Page")
+//   prevSearch         - Autocomplete search term for Previous URI (default "Test 2")
 //   nextTitle          - Next link label (default ">")
 //   prevTitle          - Previous link label (default "<")
 //   bgColor            - BG color hex

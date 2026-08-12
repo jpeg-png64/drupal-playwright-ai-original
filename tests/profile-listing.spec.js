@@ -38,7 +38,8 @@ test.describe("Profile Listing Block", () => {
 
     await test.step("Publish Page", async () => {
       await page.getByRole("button", { name: "Publish Page" }).click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForFunction(() => !window.location.pathname.startsWith("/node/add"), { timeout: 120000 });
+      await page.waitForLoadState("load");
     });
 
     await test.step("Verify Frontend", async () => {

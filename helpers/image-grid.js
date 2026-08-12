@@ -88,32 +88,26 @@ export async function addImageGridBlock(page, option) {
 
   await caption.fill(option.caption);
 
-  // Color fields — hidden inputs inside Drupal color field widgets, set via JS
+  // Color fields — hidden inputs inside Drupal color field widgets, set via JS.
+  // Use the LAST matching input so color settings land on the correct block
+  // when multiple blocks exist on the page (profile gotcha 6).
 
-  if (option.borderColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_image_grid_brdr_color"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, option.borderColor);
-  }
-  if (option.captionBgColor) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_image_grid_caption_bg_color"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, option.captionBgColor);
-  }
-  if (option.overlayBg) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_image_grid_overlay_bg"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, option.overlayBg);
-  }
-  if (option.overlayBgHover) {
-    await page.evaluate((val) => {
-      const el = document.querySelector('input[name*="field_mtpc_image_grid_overlay_bg_hvr"]');
-      if (el) { el.value = val; el.dispatchEvent(new Event("change", { bubbles: true })); }
-    }, option.overlayBgHover);
-  }
+  const setColor = async (nameFragment, value) => {
+    if (!value) return;
+    await page.evaluate(({ fragment, val }) => {
+      const els = document.querySelectorAll(`input[name*="${fragment}"]`);
+      const el = els[els.length - 1];
+      if (el) {
+        el.value = val;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }, { fragment: nameFragment, val: value });
+  };
+
+  await setColor("field_mtpc_image_grid_brdr_color", option.borderColor);
+  await setColor("field_mtpc_image_grid_cap_bgcol", option.captionBgColor);
+  await setColor("field_mtpc_image_grid_cap_txtcol", option.captionTextColor);
+  await setColor("field_mtpc_image_grid_cap_txthov", option.captionTextHover);
 }
 
 async function addGridMedia(page, selector, media) {

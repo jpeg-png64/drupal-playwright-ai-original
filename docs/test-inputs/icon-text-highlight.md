@@ -2,8 +2,7 @@
 
 **Spec:** `tests/icon-text-highlight.spec.js` · **Helper:** `addIconTextHighlightBlock(page, options)`
 
-> **Icon randomization:** the spec picks a random Font Awesome icon per block from a pool (`fa-light fa-lightbulb`, `fa-solid fa-rocket`, `fa-duotone fa-flask`, `fa-solid fa-graduation-cap`, `fa-light fa-compass`, `fa-duotone fa-heart`, `fa-solid fa-book`, `fa-light fa-pen-nib`) at runtime.
-> **Manual override:** set `HIGHLIGHT_ICONS` env var (comma-separated, one per block) to force specific icons, e.g. `HIGHLIGHT_ICONS="fa-solid fa-star,fa-light fa-moon,fa-duotone fa-gem"`. The icon values below are example inputs only.
+Each block uses the exact Font Awesome icon listed below (fixed — no randomization).
 
 ## Test 1: All column styles on one page (3 blocks)
 

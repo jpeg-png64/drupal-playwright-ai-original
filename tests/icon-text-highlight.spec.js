@@ -4,26 +4,6 @@ import { addOneColumnSection } from "../helpers/section.js";
 import { addIconTextHighlightBlock } from "../helpers/icon-text-highlight.js";
 import { collapseCurrentBlock } from "../helpers/collapse.js";
 
-const ICON_POOL = [
-  "fa-light fa-lightbulb",
-  "fa-solid fa-rocket",
-  "fa-duotone fa-flask",
-  "fa-solid fa-graduation-cap",
-  "fa-light fa-compass",
-  "fa-duotone fa-heart",
-  "fa-solid fa-book",
-  "fa-light fa-pen-nib",
-];
-
-function pickIcon(index) {
-  const override = process.env.HIGHLIGHT_ICONS;
-  if (override) {
-    const icons = override.split(",").map((s) => s.trim());
-    if (icons[index]) return icons[index];
-  }
-  return ICON_POOL[Math.floor(Math.random() * ICON_POOL.length)];
-}
-
 test.describe("Icon & Text Highlight Block", () => {
   test("All column styles on one page", async ({ page }) => {
     await test.step("Login", async () => {
@@ -47,7 +27,7 @@ test.describe("Icon & Text Highlight Block", () => {
         headingDisplay: "center",
         iconTextStyle: "row",
         tabletColumns: "original",
-        icon: pickIcon(0),
+        icon: "fa-light fa-lightbulb",
         text: "<h3>Two Column Highlight</h3><p>Testing two column layout.</p>",
       });
     });
@@ -63,7 +43,7 @@ test.describe("Icon & Text Highlight Block", () => {
         headingDisplay: "left",
         iconTextStyle: "column",
         tabletColumns: "two",
-        icon: pickIcon(1),
+        icon: "fa-solid fa-rocket",
         text: "<h3>Three Column Highlight</h3><p>Testing three column layout.</p>",
       });
     });
@@ -79,7 +59,7 @@ test.describe("Icon & Text Highlight Block", () => {
         headingDisplay: "center",
         iconTextStyle: "row",
         tabletColumns: "original",
-        icon: pickIcon(2),
+        icon: "fa-duotone fa-flask",
         text: "<h3>Four Column Highlight</h3><p>Testing four column layout.</p>",
       });
     });
@@ -90,7 +70,8 @@ test.describe("Icon & Text Highlight Block", () => {
 
     await test.step("Publish Page", async () => {
       await page.getByRole("button", { name: "Publish Page" }).click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForFunction(() => !window.location.pathname.startsWith("/node/add"), { timeout: 120000 });
+      await page.waitForLoadState("load");
     });
 
     await test.step("Verify Frontend", async () => {

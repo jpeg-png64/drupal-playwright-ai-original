@@ -140,7 +140,7 @@ test.describe("Image Grid Block - All Layout/Overlay Combinations", () => {
       await collapseCurrentBlock(page);
     });
 
-    await test.step("Add Block 2 - overlay colors", async () => {
+    await test.step("Add Block 2 - caption text colors", async () => {
       await addImageGridBlock(page, {
         layout: "large",
         hover: "fade",
@@ -151,8 +151,8 @@ test.describe("Image Grid Block - All Layout/Overlay Combinations", () => {
         link: "https://example.com",
         target: "_blank",
         caption: "Block Two",
-        overlayBg: "rgba(0,0,0,0.3)",
-        overlayBgHover: "rgba(0,0,0,0.7)",
+        captionTextColor: "#0a0a0a",
+        captionTextHover: "#e62e6b",
         media: "1170_home.png",
         mediaOverlay: "image-placeholder-2.jpg",
       });

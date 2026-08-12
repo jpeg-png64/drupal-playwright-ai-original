@@ -17,6 +17,11 @@
 2. Views name is an entity-reference autocomplete: fill → wait 2s → click first `.ui-autocomplete li.ui-menu-item`.
 3. Display select is required; value options appear only after the view name is selected. Default `- Select -` blocks publishing.
 4. View content depends on site content; the container `.views-element-container` renders even when empty.
+5. **Not every view is usable** — only views exposing a *block* display populate the Display dropdown. A view with only page/master displays yields just `- Select -` and cannot be published.
+
+## Verified on UAT (2026-08)
+- View **"Events"** works: autocomplete resolves, Display options are `- Select -, Block (block_1), Block 2 (block_2), Block 3 (block_3)`; select index 1 → publish succeeds, frontend renders `.views-element-container` + `.paragraph--type--mod-views-block`.
+- View **"Content"** does NOT work: its Display dropdown contains only `- Select -` (no block display) → publish blocked. Use `"Events"` instead.
 
 ## Helper Signature
 ```javascript

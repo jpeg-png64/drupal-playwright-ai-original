@@ -32,6 +32,20 @@ test.describe("All Blocks Combined", () => {
       await login(page);
     });
 
+    await test.step("Create link target pages", async () => {
+      for (const title of ["ZZ Next Target", "ZZ Previous Target"]) {
+        await page.goto("/node/add/custom_page/mtpc");
+        await page.waitForLoadState("networkidle");
+        await page.getByRole("textbox", { name: "Page Title" }).fill(title);
+        await page.getByRole("button", { name: "Publish Page" }).click();
+        await page.waitForFunction(
+          () => !window.location.pathname.startsWith("/node/add"),
+          { timeout: 120000 },
+        );
+        await page.waitForLoadState("load");
+      }
+    });
+
     await test.step("Create Standard Page", async () => {
       await page.goto("/node/add/custom_page/mtpc");
       await page.waitForLoadState("networkidle");
@@ -70,7 +84,10 @@ test.describe("All Blocks Combined", () => {
     await test.step("Collapse Block", async () => { await fastCollapseCurrentBlock(page); });
 
     await test.step("Add Next & Previous Block", async () => {
-      await addNextPreviousBlock(page);
+      await addNextPreviousBlock(page, {
+        nextSearch: "ZZ Next Target",
+        prevSearch: "ZZ Previous Target",
+      });
     });
     await test.step("Collapse Block", async () => { await fastCollapseCurrentBlock(page); });
 
@@ -145,7 +162,8 @@ test.describe("All Blocks Combined", () => {
 
     await test.step("Publish Page", async () => {
       await page.getByRole("button", { name: "Publish Page" }).click();
-      await page.waitForURL((url) => !url.pathname.includes("/node/add"), { timeout: 30000 });
+      await page.waitForFunction(() => !window.location.pathname.startsWith("/node/add"), { timeout: 120000 });
+      await page.waitForLoadState("load");
     });
 
     await test.step("Verify Frontend", async () => {
@@ -155,6 +173,7 @@ test.describe("All Blocks Combined", () => {
       await expect(page.getByText("Accordion Item 1")).toBeVisible();
       await expect(page.getByText("Accordion Item 2")).toBeVisible();
       await expect(page.getByText("Test Event")).toBeVisible();
+      await expect(page.locator(".views-element-container").last()).toBeVisible();
       await expect(page.locator(".paragraph--type--mod-views-block").last()).toBeVisible();
     });
   });

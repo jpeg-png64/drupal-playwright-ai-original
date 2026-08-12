@@ -42,21 +42,23 @@ Each test = 1 block. **Page title:** `Grid {Layout} {Hover}` · **Section:** "Te
 | media                      | 1170_home.png                |
 | mediaOverlay               | image-placeholder-2.jpg      |
 
-### Block 2 — overlay colors
+### Block 2 — caption text colors
 
-| Field                      | Value                         |
-| -------------------------- | ----------------------------- |
-| layout                     | large                         |
-| hover                      | fade                          |
-| zoom                       | disabled                      |
-| borderWidth / borderRadius | 1 / 4                         |
-| captionBg                  | false                         |
-| link / target              | https://example.com / \_blank |
-| caption                    | Block Two                     |
-| overlayBg                  | rgba(0,0,0,0.3)               |
-| overlayBgHover             | rgba(0,0,0,0.7)               |
-| media                      | 1170_home.png                 |
-| mediaOverlay               | image-placeholder-2.jpg       |
+| Field            | Value                         |
+| ---------------- | ----------------------------- |
+| layout           | large                         |
+| hover            | fade                          |
+| zoom             | disabled                      |
+| borderWidth / borderRadius | 1 / 4                |
+| captionBg        | false                         |
+| link / target    | https://example.com / \_blank |
+| caption          | Block Two                     |
+| captionTextColor | #0a0a0a                       |
+| captionTextHover | #e62e6b                       |
+| media            | 1170_home.png                 |
+| mediaOverlay     | image-placeholder-2.jpg       |
+
+> Note: overlay BG color fields do not exist in the block (profile gotcha 5). The caption **text** color fields (`cap_txtcol`, `cap_txthov`) are the correct substitutes.
 
 ## Media selection
 

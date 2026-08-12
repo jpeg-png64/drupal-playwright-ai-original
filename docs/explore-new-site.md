@@ -41,7 +41,7 @@ Print `"profiles checked"` after reading the block profiles.
 
 ### 1. Add the block
 
-Login via `drush uli`, navigate to `/node/add/custom_page/mtpc`, add a 1-Column Section, then add the block.
+Log in using the provided login link (no `drush uli`), navigate to `/node/add/custom_page/mtpc`, add a 1-Column Section, then add the block.
 
 Record:
 - The exact button text to add the block (e.g. `"Add Video Block"`)

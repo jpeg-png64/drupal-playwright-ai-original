@@ -7,6 +7,13 @@
 - **View name:** `"Events"` (renders content — "News Block" is empty on this site)
 - **Display:** index 1 (`Block`)
 
+### View name candidates (verified on UAT 2026-08)
+
+| View name | Display options        | Usable? |
+| --------- | ---------------------- | ------- |
+| Events    | Block, Block 2, Block 3 | Yes     |
+| Content   | `- Select -` only       | No      |
+
 ### Hardcoded values inside helper
 
 | Field        | Value    |

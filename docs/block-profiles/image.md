@@ -12,9 +12,9 @@
 | Image Caption | `block.locator('textarea[name*="field_mod_image_caption"]')` | textarea | No | Directly editable |
 | Caption Background | `block.locator('input[name*="field_mtpc_image_caption_bg"]')` | checkbox | No | Unchecked by default |
 | Original Size | `block.locator('input[name*="field_mtpc_image_original_size"]')` | checkbox | No | Unchecked by default |
-| Image Alignment | `block.locator('select[name*="field_mtpc_image_align_position"]')` | select | No | `_none`, `_left`, `_right`, `_center` |
+| Image Alignment | `block.locator('select[name*="field_mtpc_image_align_position"]')` | select | No | `_none`, `left`, `right`, `center` |
 | Link URL | `block.locator('input[name*="field_mtpc_mod_link"][name$="[uri]"]')` | text input | No | Optional hyperlink |
-| Link Target | `block.locator('select[name*="field_mtpc_mod_link"][name$="[target]"]')` | select | No | `_self`, `_blank`, `_parent`, `_top` |
+| Link Target | `block.locator('select[name*="field_mtpc_mod_link"][name$="[target]"]')` | select | No | `_self`, `_blank`, `parent`, `top` |
 | CSS Classes | `block.locator('textarea[name*="field_mod_css_classes"]')` | textarea | No | Optional |
 | Animation Effect | `select[name*="field_mtpc_animation_effect"]` | select | No | `fade-up`, `fade-down`, `fade-right`, `fade-left`, `fade-up-right`, `fade-up-left`, `fade-down-right`, `fade-down-left`, `flip-left`, `flip-right`, `flip-up`, `flip-down`, `zoom-in`, `zoom-in-up`, `zoom-in-down`, `zoom-in-right`, `zoom-out`, `zoom-out-up`, `zoom-out-down`, `zoom-out-right`, `zoom-out-left` (21 options) |
 | Animation Easing | `select[name*="field_mtpc_animation_easing"]` | select | No | `linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`, `ease-in-back`, `ease-out-back`, `ease-in-out-back`, `ease-in-sine`, `ease-out-sine`, `ease-in-out-sine`, `ease-in-quad`, `ease-out-quad`, `ease-in-out-quad`, `ease-in-cubic`, `ease-out-cubic`, `ease-in-out-cubic`, `ease-in-quart`, `ease-out-quart`, `ease-in-out-quart` (20 options) |

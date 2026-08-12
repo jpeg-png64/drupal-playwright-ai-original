@@ -11,7 +11,36 @@ docs/test-inputs/ - Exact input values per test
 helpers/          - Shared helper functions
 tests/            - Generated Playwright spec files
 test-results/     - Reports and failure artifacts
+uat/              - Ad-hoc UAT probes against Docker UAT servers
 ```
+
+# UAT Probes
+
+`uat/` contains throwaway Playwright probes run against the Docker UAT servers
+(`*.docker-uat01.ust.hk`) — they are NOT part of the main suite. To run one
+against a specific server:
+
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test uat/block-build.spec.js \
+  --config=uat/playwright-uat.config.js --reporter=line
+```
+
+Learnings that apply to the main suite:
+
+- **Login is via the given link, not `drush uli`** — the human provides the login
+  link (each new user has their own); open it once to capture the session
+  (`uat/capture-session.mjs`), then probes reuse the saved storage state.
+  Authentication check on `/user`: body contains "logout" (case-insensitive).
+- **Slow sites need `waitForLoadState("domcontentloaded")`** instead of
+  `networkidle` — UAT servers frequently never reach `networkidle` on admin forms.
+- **Publish guard:** after "Publish Page", wait for the URL to leave `/node/add`
+  (e.g. `waitForFunction(() => !window.location.pathname.startsWith("/node/add"))`
+  or `waitForURL`). A publish failure leaves the form on `/node/add`; the guard
+  turns that into a clear timeout instead of a false frontend-assertion pass.
+- **Autocomplete needs existing nodes:** `addNextPreviousBlock` fills a search
+  term and clicks the first suggestion — the term must match a node that exists.
+  Defaults are `"Test Page"` / `"Test 2"`; specs should create their own link
+  targets and pass `nextSearch` / `prevSearch` (see `tests/next-previous.spec.js`).
 
 # Running Tests
 
@@ -85,11 +114,15 @@ Prefer locators in this order: `getByRole()` → `getByLabel()` → `getByPlaceh
 
 Avoid: XPath, dynamic IDs, `page.waitForTimeout()` (helpers use it — don't add more).
 
-After publishing:
+After publishing (publish guard — a failed publish leaves the form on `/node/add`, which becomes a clear timeout instead of a false frontend pass):
 
 ```js
 await page.getByRole("button", { name: "Publish Page" }).click();
-await page.waitForLoadState("networkidle");
+await page.waitForFunction(
+  () => !window.location.pathname.startsWith("/node/add"),
+  { timeout: 120000 },
+);
+await page.waitForLoadState("load");
 ```
 
 # Test Structure
@@ -102,7 +135,21 @@ Every test follows: 1) Login, 2) Create Standard Page (`/node/add/custom_page/mt
 - **Content type URL:** `/node/add/custom_page/mtpc`
 - **Title field:** `getByRole("textbox", { name: "Page Title" })`
 - **Publish button:** `getByRole("button", { name: "Publish Page" })`
-- **Login:** Use `login(page)` helper (drush uli)
+- **Login:** Use the provided login link — no `drush uli` (see "Login: Given-Link Workflow")
+
+# Login: Given-Link Workflow
+
+**The automation never generates a login. It uses the link that is provided.**
+
+- Each user has their own login link (a one-time session link or CAS login) — a new user gets a new link.
+- To use a given link:
+  1. Open the provided link once in a browser to establish the Drupal session
+     (`uat/capture-session.mjs` for UAT; the `login()` helper for the main suite).
+  2. The session is cached in the storage-state file
+     (`.auth/storage-state-builder-clean.json` for UAT, `.auth/storage-state.json` for local).
+  3. Tests/probes authenticate from that saved session — no per-test login.
+- Running the suite for a different user? Re-capture the session with their new
+  link, then run the same tests unchanged.
 
 # Helper Function Reference
 
@@ -115,7 +162,7 @@ Every helper has different parameter expectations. **Read the helper source befo
 | Helper | Signature | Notes |
 |--------|-----------|-------|
 | `addPageTitleBlock(page, options?)` | `options = { title?, align? }` | Uses first column menu (no `.last()`) |
-| `addNextPreviousBlock(page)` | No config | Autocomplete for links |
+| `addNextPreviousBlock(page, options?)` | `options = { nextSearch?, prevSearch?, nextTitle?, prevTitle?, bgColor?, linkColor?, borderColor?, bgHoverColor?, linkHoverColor?, borderHoverColor? }` — autocomplete links; pass `nextSearch`/`prevSearch` for nodes you create |
 | `addYoutubeBlock(page, width, height)` | Width/height as strings | Fills video ID directly |
 | `addSlideshowBlock(page, options?)` | `options.media?` = array of names/indexes per slide | Items default to 2 slides, media item = index |
 | `addThreeColCarouselBlock(page, options?)` | `options.media?` = array of names/indexes per item | Creates 3 items, media item = first |
@@ -127,7 +174,7 @@ Every helper has different parameter expectations. **Read the helper source befo
 |--------|----------------------|
 | `addImageBlock(page, config)` | `{ captionBg, originalSize, align, target }` — ALL required; `media?` = name/index (default first item) |
 | `addVideoBlock(page, config)` | `{ url, width, height }` — `autoplay` optional (default `false`) |
-| `addImageGridBlock(page, option)` | `{ layout, hover, zoom, borderWidth, borderRadius, captionBg, link, target, caption }` — `media?` (main) and `mediaOverlay?` (overlay), default first item |
+| `addImageGridBlock(page, option)` | `{ layout, hover, zoom, borderWidth, borderRadius, captionBg, link, target, caption, borderColor?, captionBgColor?, captionTextColor?, captionTextHover? }` — `media?` (main) and `mediaOverlay?` (overlay), default first item. Gotchas: the caption BG color field is `cap_bgcol` (NOT `caption_bg_color`) — helper targets `field_mtpc_image_grid_cap_bgcol`; overlay BG color fields do NOT exist (use caption text color fields `cap_txtcol`/`cap_txthov`); color setters use `.last()` for multi-block pages |
 | `addProfileListingBlock(page, layout?)` | `layout` = `"one_col"` (default) or `"two_col"` — no config object |
 | `addProfileDetailsBlock(page)` | **No params** — no config object |
 
@@ -159,11 +206,26 @@ Every helper has different parameter expectations. **Read the helper source befo
 
 # Known Issues & Solutions
 
-## 1. Multi-section selector conflicts
+## 1. Section index prefix selectors are fragile
 
-**Problem:** Selectors like `[id^="edit-field-mod-sections-0-subform-..."]` target the wrong section when multiple sections exist.
+**Problem:** Selectors like `[id^="edit-field-mod-sections-0-subform-..."]` hardcode the section index (`-0-`). On multi-section pages the section you want is often not index 0, and on template edits the pre-existing section may already occupy index 0 — so helpers/specs using this prefix target the wrong element or time out entirely.
 
-**Solution:** Use a **single section** for all blocks in combined specs; call `collapseCurrentBlock(page)` after each block.
+**Solution:** Use substring selectors with `.last()` instead of the `sections-0` prefix, and use a **single section** for all blocks in combined specs; call `collapseCurrentBlock(page)` after each block.
+
+```js
+// CORRECT — substring + .last() (works at any section index)
+await page
+  .locator('[id*="field-mod-1-col-container-add-more"]')
+  .last()
+  .getByRole("button", { name: "List additional actions" })
+  .click();
+
+// WRONG — hardcoded sections-0 prefix (breaks when section index != 0)
+await page
+  .locator('[id^="edit-field-mod-sections-0-subform-field-mod-1-col-container-add-more"]')
+  .getByRole("button", { name: "List additional actions" })
+  .click();
+```
 
 ```js
 // CORRECT — single section
@@ -182,9 +244,9 @@ await addOneColumnSection(page, "Section 2");
 
 ## 2. Text Area block CKEditor not found
 
-**Problem:** `addTextAreaBlock` helper uses `.first()` on column menu — breaks in multi-block pages.
+**Problem:** `addTextAreaBlock` helper's CKEditor textbox (`getByRole("textbox", { name: "Rich Text Editor. Editing" })`) can resolve to an old editor when multiple blocks exist.
 
-**Solution:** Inline the text area code with `.last()`:
+**Solution:** The helper already uses `.last()` on the column menu and the textbox, so it is multi-block safe. If a spec needs a custom content value in a combined page, inline the fill with `.last()`:
 
 ```js
 await page
@@ -226,15 +288,15 @@ await addImageBlock(page, {
 | zoom | `"none"` | `"_none"` |
 | align | `"none"` | `"_none"` |
 
-## 5. Slideshow ignores parameters
+## 5. Slideshow defaults
 
-**Problem:** `addSlideshowBlock(page)` takes **no parameters** — it hardcodes navigation, duration, transition and creates 2 items internally.
+**Problem:** `addSlideshowBlock(page, options = {})` — calling with no options uses defaults: navigation `"square"`, slide duration `"5000"`, transition `"500"`, 2 slides created internally. Options support `autoplay`, `infinite`, `fade`, `arrows`, `adaptiveHeight`, `navigationBullets`, `slideDuration`, `transitionDuration`, `cssClasses`, `slideCount`, `media`, `items`.
 
-**Solution:** Call with no params. Do NOT call `addSlideshowItem` separately.
+**Solution:** Call with no args for defaults. Do NOT call `addSlideshowItem` separately.
 
 ## 6. Test timeout with many blocks
 
-**Problem:** 15 blocks with media modals + 4s collapse waits exceeds 180s default.
+**Problem:** 16 blocks with media modals + 4s collapse waits exceeds 180s default.
 
 **Solution:** Set extended timeout for combined specs:
 
