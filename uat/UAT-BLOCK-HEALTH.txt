@@ -1,0 +1,128 @@
+UAT-BLOCK-HEALTH
+================
+Server: https://builder-clean.docker-uat01.ust.hk | Updated 2026-08-12
+Status of every previously-reported issue/area from the original callitso
+health check, re-verified on builder-clean. Only PASSED / FAIL / UNTESTED.
+
+PASSED
+------
+Blocks (16/16): Text Area, Icon & Text Highlight, Accordion, Events Carousel,
+  3-Column Carousel, Page Title, Navigation Menu, Next & Previous, Image,
+  Video (iframe embed), Youtube, Image Grid, Slideshow, Views, Profile
+  Listing, Profile Details.
+
+CKEditor forms: Add News, Add People (/node/add/people), Add Album, Albums
+  Config, Footer Config, Add webform, webform "Add element" dialog, News
+  Category add-term, People Type add-term, sitemap config
+  (/admin/config/search/sitemap).
+
+Top bar / trays: MANAGE tray, SHORTCUTS tray, EDIT tab, user menu,
+  brand links (/admin/mtpc/content, /), all header nav links (e.g.
+  /style-guide, /events/event-1) return HTTP 200, off-canvas "Open
+  configuration options" side panels open and "Configure block" leads to a
+  200 admin page, shortcuts tray "Edit shortcuts" 200, View/Edit profile
+  pages 200. Full sweep of all 196 unique internal top-bar/header/side-
+  panel links: 195 OK, 1 bad = /admin/config/people/otp (500, listed
+  below).
+
+Fixed vs callitso: content language form (/admin/config/regional/
+  content-language) now HTTP 200.
+
+FAIL
+----
+PHP deprecation errors (new, real, logged in dblog type=php):
+  - str_replace(): Passing null to parameter #3 ($subject) is deprecated
+    in Drupal\mtpcbuild_thm\RenderVideo->render() - fired by the frontend
+    /ajax/load_video/{nid} call when a Video/Youtube block renders.
+  - Creation of dynamic property $UserIP / $GeoDB is deprecated in
+    Drupal\mtpcbuild_sw\UserLocation->__construct() - same frontend
+    trigger (video block view).
+
+HTTP 500 (real bugs, need code fix):
+  - /admin/event-registration/overview  ksort TypeError (flips_core, same as
+    callitso). Module "MTPC Builder Enhancement - Event Registration" IS
+    installed; only the overview route is wired (siblings 404).
+  - /admin/config/people/otp            ArgumentCountError (OTP module
+    enabled; confirmed in dblog, same as callitso).
+
+HTTP 404 (missing assets, real):
+  - /sites/default/files/2024-01/bg_light_blue.png (also .jpg) file missing
+  - /themes/misc/menu-expanded.png      core theme image missing
+
+HTTP 404 (NOT a bug - explained):
+  - /admin/config/people/rac/relations  module "Role Access Control
+    Relations" is DISABLED - routes absent by design
+  - /quickedit/metadata, /quickedit/access  module "Quick Edit" is DISABLED
+  - /admin/help/ckeditor               old module name; the module is now
+    "CKEditor 5" and /admin/help/ckeditor5 returns 200
+  - /admin/event-registration/config, /email-template, /my-event-description
+    flips routes not registered on this build (feature partially wired)
+  - /admin/modules/install              route absent (Drupal 10.8)
+  - /admin/help/hkust_blocks            custom module ships no help topic
+
+HTTP 404 (possibly intended):
+  - /people                            no People front page path; admin
+    People section works (View/Add People, People Config)
+
+HTTP 403 (non-issue): /node/add/people/mtpc - use plain /node/add/people.
+
+UNTESTED
+--------
+None.
+
+HOW TO MANUALLY ACCESS THE ERRORS
+=================================
+1. Open https://builder-clean.docker-uat01.ust.hk and log in as admin
+   (CAS / drush uli).
+
+2. Reproduce a 500 (shows only a generic page):
+   - /admin/event-registration/overview -> "The website encountered an
+     unexpected error. Try again later."
+   - /admin/config/people/otp -> same generic message.
+
+3. See the real exception - Recent log messages:
+   - Toolbar -> Reports -> Recent log messages  (URL: /admin/reports/dblog)
+   - Filter to PHP errors: /admin/reports/dblog?type[]=php -> rows like
+     "ArgumentCountError: Too few arguments to function..." and
+     "TypeError: ksort(): Argument #1 ($array) must be of type..."
+   - Click the event link to open /admin/reports/dblog/event/{eid} for the
+     full Message, Location, Referrer and Operations (View / Re-run).
+
+4. See the 404s (page-not-found warnings):
+   - /admin/reports/dblog?type[]=page+not+found -> every 404 (e.g. /people,
+     /admin/config/people/rac/relations, /quickedit/metadata) with the
+     Location (requester) and Referrer.
+
+5. Module status (explains disabled-module 404s):
+   - /admin/modules -> e.g. "Quick Edit" and "Role Access Control Relations"
+     are unchecked (disabled).
+
+Note: this build does NOT display errors on the page itself (generic
+"unexpected error" page only). The dblog is the source of truth for the
+actual exception message.
+
+LATEST BUILD PROBE (2026-08-12, builder-clean)
+===============================================
+Ran uat/block-build.spec.js (Playwright). Login via existing admin session
+(/user + "logout" check — NOT drush uli, which was flaky on this server).
+Draft page created but deliberately NOT published.
+
+  Block                 Result
+  --------------------  ---------------------------------------------
+  Page Title            PASS  (override title field filled + asserted)
+  Accordion             PASS  (added, 1 item configured; no 500 this time)
+  Text Area             PASS  (CKEditor .last() filled, no 500)
+  Image                 PASS  (media modal opened, items present,
+                               insert workflow via inline code)
+  Publish guard         PASS  (draft still on /node/add, Publish button present)
+
+Notes:
+- Accordion is NO LONGER a known server-500 on this build (earlier UAT
+  builds / run 1 of this same test hit "Oops, something went wrong").
+- The main-suite helper addNextPreviousBlock() failed here ONLY because the
+  default autocomplete terms ("Test Page" / "Test 2") match no nodes on a
+  fresh site. Fixed in helpers/next-previous.js: specs now pass nextSearch /
+  prevSearch for nodes they create (see tests/next-previous.spec.js).
+- Next-previous block itself adds fine; only the link autocomplete needs a
+  pre-existing node.
+- See UAT-ADMIN-OVERVIEW.md for the builder-clean admin walkthrough.
