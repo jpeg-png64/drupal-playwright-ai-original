@@ -5,6 +5,8 @@ Start here:
 2. Set `STORAGE_STATE` or give a one-time `LOGIN_LINK`.
 3. Run a `spec.js` file.
 
+For the full setup and detailed workflow, read `manual/USAGE.md`.
+
 ## Fastest way to begin
 
 ```bash
