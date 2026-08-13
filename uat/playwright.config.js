@@ -1,4 +1,8 @@
 import { defineConfig } from "@playwright/test";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   testDir: ".",
@@ -15,16 +19,18 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: "https://builder-clean.docker-uat01.ust.hk",
+    baseURL: process.env.UAT_BASE || "https://builder-clean.docker-uat01.ust.hk",
     headless: true,
     actionTimeout: 30000,
     navigationTimeout: 60000,
     httpCredentials: {
-      username: "helper",
-      password: "DaTLLkturGtSUgI0",
+      username: process.env.UAT_BASIC_AUTH_USER || "helper",
+      password: process.env.UAT_BASIC_AUTH_PASS || "DaTLLkturGtSUgI0",
     },
-    storageState:
-      "/Users/leemingfung/Desktop/drupal-playwright-ai/.auth/storage-state-builder-clean.json",
+    storageState: resolve(
+      __dirname,
+      "../.auth/storage-state-builder-clean.json"
+    ),
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },

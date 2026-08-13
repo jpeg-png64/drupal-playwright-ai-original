@@ -1,10 +1,53 @@
 import { test } from "@playwright/test";
-import { writeFileSync, readFileSync } from "fs";
+import { writeFileSync } from "fs";
 
-const TARGETS = ["Taxonomy term", "Templates", "Webform submissions"];
+const TARGETS = [
+  "Admin user",
+  "Administrative View (Distribution) - Landing Pages",
+  "Archive",
+  "Content",
+  "Document Library",
+  "Events",
+  "External authentication links",
+  "External Media Listing Filter Form",
+  "FAQ",
+  "FAQ API",
+  "Feeds",
+  "File Entity Browser",
+  "File Entity Files",
+  "Frontpage",
+  "HKUST NEWS",
+  "HKUST Search",
+  "Landing Page",
+  "Media",
+  "Media library",
+  "MTPC Contents",
+  "MTPC Newsletter Back Issues",
+  "Multimedia - Annual Report",
+  "Multimedia - eCard",
+  "Multimedia - Genesis",
+  "Multimedia - Photo Gallery",
+  "Multimedia - Publication",
+  "Multimedia - Video",
+  "News",
+  "News & Events",
+  "News Block",
+  "News Category Taxonomy",
+  "News Sidebar",
+  "Paragraphs library",
+  "Paragraphs library browser",
+  "Photos & Videos",
+  "Product Listing",
+  "Scheduled Content",
+  "Scheduled Media",
+  "Scheduled Taxonomy Terms",
+  "Taxonomy term",
+  "Templates",
+  "Webform submissions",
+];
 
-test("Fresh page per view -> last 3", async ({ page }) => {
-  test.setTimeout(600000);
+test("Fresh page per view -> all views", async ({ page }) => {
+  test.setTimeout(1800000);
 
   await page.goto("/user");
   await page.waitForLoadState("domcontentloaded");
@@ -15,8 +58,6 @@ test("Fresh page per view -> last 3", async ({ page }) => {
   if (await agree.count()) await agree.click().catch(() => {});
 
   const results = [];
-  const existing = JSON.parse(readFileSync("/tmp/views-list-results.json", "utf8"));
-  const keep = existing.filter((r) => !TARGETS.includes(r.name));
 
   for (let i = 0; i < TARGETS.length; i++) {
     const name = TARGETS[i];
@@ -103,7 +144,6 @@ test("Fresh page per view -> last 3", async ({ page }) => {
     console.log((i + 1) + "/" + TARGETS.length + " " + name + " -> " + status + " | Display: " + (rep?.exists === false ? "NO DROPDOWN" : JSON.stringify(rep?.options || [])) + (errors.length ? " | ERRORS: " + errors.join(" // ") : ""));
   }
 
-  const all = [...keep, ...results];
-  writeFileSync("/tmp/views-list-results.json", JSON.stringify(all, null, 2));
-  console.log("WROTE /tmp/views-list-results.json (" + all.length + " total)");
+  writeFileSync("/tmp/views-list-results.json", JSON.stringify(results, null, 2));
+  console.log("WROTE /tmp/views-list-results.json (" + results.length + " total)");
 });

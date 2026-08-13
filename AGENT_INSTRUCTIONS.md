@@ -10,7 +10,7 @@ Steps an agent should follow (short):
 
 Rules:
 - Never store or echo credentials or storage-state contents.
-- Do not attempt drush on remote sites (only allowed when BASE_URL is localhost and ALLOW_DRUSH=true).
+- Never run drush; sessions come only from a provided one-time login link (LOGIN_LINK) captured to STORAGE_STATE.
 - Always remind the user which command will run and show the exact env vars used.
 
 Example run (single spec):

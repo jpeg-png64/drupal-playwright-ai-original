@@ -47,7 +47,6 @@ UAT site: `https://builder-clean.docker-uat01.ust.hk` (basic-auth protected; adm
 ### Capture the admin session (one-time)
 
 ```bash
-node uat/headless-login.mjs    # headless login with the helper account
 node uat/capture-session.mjs   # interactive browser (CAS) login as the real admin user
 ```
 
@@ -70,10 +69,11 @@ UAT reports: `uat/test-results/html-report-uat/`. UAT findings: `uat/UAT-ADMIN-O
 
 ## 4) Important env vars
 
-- `BASE_URL` (required for remote sites)
+- `BASE_URL` (required)
 - `STORAGE_STATE` (defaults to `.auth/storage-state.json`)
 - `LOGIN_LINK` (one-time interactive capture)
-- `ALLOW_DRUSH=true` (only for local Docker; disabled for remote sites)
+- `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` (optional, for basic-auth protected sites in the main suite)
+- `UAT_BASE`, `UAT_BASIC_AUTH_USER`, `UAT_BASIC_AUTH_PASS` (override the uat config defaults)
 - `HEADLESS`, `SCREENSHOT`, `TRACE` (optional runner controls)
 
 ## 5) When editing or generating tests
@@ -81,3 +81,27 @@ UAT reports: `uat/test-results/html-report-uat/`. UAT findings: `uat/UAT-ADMIN-O
 Always read the block docs first: `docs/block-profiles/<block>.md` and `docs/test-inputs/<block>.md`. Check the helper in `helpers/` for its exact signature before calling it.
 
 For agent usage and detailed onboarding see `AGENT_INSTRUCTIONS.md` and `AGENTS.md`.
+
+---
+
+Quick steps for a new user (new site) or same site with a different user
+
+1) New site (use the clean/template copy)
+- Open the clean/template folder on your desktop.
+- Capture a login session (paste your one-time login link when prompted):
+
+  BASE_URL="https://your-site" LOGIN_LINK="https://your-site/user/one-time-login/XYZ" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" node -e "(async()=>{const { chromium }=require('playwright');const b=await chromium.launch({headless:false});const c=await b.newContext();const p=await c.newPage();await p.goto(process.env.LOGIN_LINK);console.log('Complete login in the opened browser, then press ENTER');process.stdin.once('data', async()=>{require('fs').mkdirSync('.auth',{recursive:true});require('fs').writeFileSync(process.env.STORAGE_STATE||'.auth/storage-state.json', JSON.stringify(await c.storageState()));await b.close();process.exit(0);});})();"
+
+- Run a spec:
+  BASE_URL="https://your-site" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" npx playwright test tests/image.spec.js
+
+2) Same site, different user (use the no-creds copy)
+- In the no-creds folder capture a new storage state for the other user and save e.g. .auth/storage-state-alice.json with the same capture command but STORAGE_STATE changed.
+- Run tests using STORAGE_STATE=".auth/storage-state-alice.json".
+
+Notes:
+- BASE_URL is required for remote sites.
+- Do not commit .auth/ files. The template/no-creds copies do not include storage-state files by design.
+- For UAT with HTTP Basic, use the uat config which already includes httpCredentials and a pre-captured storage state.
+
+See results/views-autofill-list.md for an example result output.

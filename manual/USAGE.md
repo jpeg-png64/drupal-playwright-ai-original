@@ -33,7 +33,6 @@ Prereqs:
 
 Capture the session (one-time):
 ```
-node uat/headless-login.mjs    # headless login with the helper account
 node uat/capture-session.mjs   # interactive browser (CAS) login as the real admin user
 ```
 

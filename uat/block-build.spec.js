@@ -29,8 +29,9 @@ test.describe("UAT Build Probe - Multiple Blocks", () => {
     await test.step("Login", async () => {
       await page.goto("/user");
       await page.waitForLoadState("domcontentloaded");
-      const body = await page.locator("body").innerText().catch(() => "");
-      expect(body.toLowerCase()).toContain("logout");
+      const logoutLink = page.locator('a[data-drupal-link-system-path="logout"], a[href*="/logout"]');
+      const adminLink = page.locator('a:has-text("MTPC Administration")');
+      expect((await logoutLink.count()) + (await adminLink.count())).toBeGreaterThan(0);
     });
 
     await test.step("Create Standard Page (draft)", async () => {

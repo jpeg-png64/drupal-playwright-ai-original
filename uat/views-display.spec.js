@@ -1,5 +1,14 @@
 import { test } from "@playwright/test";
 
+// DISCOVERY probe: finds the 42 autocomplete entries (per-letter sweep) and does
+// a first-pass sequential check of the Display dropdown.
+//
+// The sequential reuse of one block is UNRELIABLE for the Display options — AJAX
+// stops repopulating them after a few iterations (everything shows "- Select -",
+// even for views that DO expose block displays). The authoritative per-view
+// results come from uat/views-list-probe.spec.js, which creates a FRESH page per
+// view. That output is what was logged into results/views-autofill-list.md.
+
 test("Probe views autocomplete -> Display dropdown", async ({ page }) => {
   test.setTimeout(600000);
 

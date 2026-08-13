@@ -79,8 +79,7 @@ Separate from the block suite, `uat/` holds health probes for the UAT build at
 ### One-time session capture
 
 ```bash
-node uat/headless-login.mjs    # headless login with the helper account → .auth/storage-state-builder-clean.json
-node uat/capture-session.mjs   # opens a browser for interactive CAS login (real admin user), saves the same file
+node uat/capture-session.mjs   # opens a browser for interactive CAS login (real admin user) → .auth/storage-state-builder-clean.json
 node uat/inspect-login.mjs     # debug: dumps the login form fields on the UAT site
 ```
 
@@ -139,7 +138,7 @@ UAT reports: `uat/test-results/html-report-uat/`. UAT docs: `uat/UAT-ADMIN-OVERV
 ├── uat/                      UAT site probes (builder-clean) — separate config + specs
 │   ├── playwright.config.js          Session-based UAT config (admin session, basic auth)
 │   ├── playwright-nosession.config.js Anonymous-only UAT config (no storage state)
-│   ├── headless-login.mjs / capture-session.mjs / inspect-login.mjs
+│   ├── capture-session.mjs / inspect-login.mjs
 │   ├── <crawl|probe|block-build|views-display|zz-all-blocks>.spec.js
 │   ├── UAT-ADMIN-OVERVIEW.md
 │   └── test-results/                  UAT artifacts (html-report-uat)
@@ -153,10 +152,10 @@ UAT reports: `uat/test-results/html-report-uat/`. UAT docs: `uat/UAT-ADMIN-OVERV
 
 | Property | Value |
 |----------|-------|
-| Block suite URL | `http://localhost:8325` (local Docker) or any remote site via `BASE_URL` |
+| Block suite URL | Any remote site via `BASE_URL` |
 | UAT site | `https://builder-clean.docker-uat01.ust.hk` (basic-auth protected; admin session in `.auth/storage-state-builder-clean.json`) |
 | Content type | `/node/add/custom_page/mtpc` |
-| Login | Provided login link (session cached in storage state; no `drush uli`) or UAT session scripts (`uat/headless-login.mjs` / `uat/capture-session.mjs`) |
+| Login | Provided login link (session cached in storage state; no `drush uli`) or UAT session capture (`uat/capture-session.mjs`) |
 | Title field | `getByRole("textbox", { name: "Page Title" })` |
 | Publish button | `getByRole("button", { name: "Publish Page" })` |
 

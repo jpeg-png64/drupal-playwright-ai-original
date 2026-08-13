@@ -108,8 +108,9 @@ test.describe("UAT Route Crawl - builder-clean", () => {
 
     await test.step("Check session", async () => {
       await page.goto("/user", { waitUntil: "domcontentloaded" });
-      const body = await page.locator("body").innerText().catch(() => "");
-      loggedIn = body.toLowerCase().includes("logout");
+      const logoutLink = page.locator('a[data-drupal-link-system-path="logout"], a[href*="/logout"]');
+      const adminLink = page.locator('a:has-text("MTPC Administration")');
+      loggedIn = (await logoutLink.count()) > 0 || (await adminLink.count()) > 0;
       console.log(`SESSION logged-in=${loggedIn}`);
     });
 

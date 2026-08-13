@@ -29,8 +29,9 @@ test.describe("All Blocks Combined (UAT)", () => {
     await test.step("Login", async () => {
       await page.goto("/user", { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(3000);
-      const body = await page.locator("body").innerText().catch(() => "");
-      expect(body.toLowerCase()).toContain("mtpc administration");
+      const logoutLink = page.locator('a[data-drupal-link-system-path="logout"], a[href*="/logout"]');
+      const adminLink = page.locator('a:has-text("MTPC Administration")');
+      expect((await logoutLink.count()) + (await adminLink.count())).toBeGreaterThan(0);
     });
 
     await test.step("Create Standard Page", async () => {

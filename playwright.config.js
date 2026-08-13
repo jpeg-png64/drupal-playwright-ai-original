@@ -30,7 +30,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:8325",
+    baseURL: process.env.BASE_URL,
     // Allow overriding headless via env (false by default for visibility)
     headless: process.env.HEADLESS === "true" ? true : false,
     actionTimeout: 30000,

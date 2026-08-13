@@ -1,9 +1,12 @@
 import { chromium } from "playwright";
 
-const BASE = "https://builder-clean.docker-uat01.ust.hk";
+const BASE = process.env.UAT_BASE || "https://builder-clean.docker-uat01.ust.hk";
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({
-  httpCredentials: { username: "helper", password: "DaTLLkturGtSUgI0" },
+  httpCredentials: {
+    username: process.env.UAT_BASIC_AUTH_USER || "helper",
+    password: process.env.UAT_BASIC_AUTH_PASS || "DaTLLkturGtSUgI0",
+  },
 });
 const page = await context.newPage();
 await page.goto(BASE + "/user/login", { waitUntil: "domcontentloaded" });

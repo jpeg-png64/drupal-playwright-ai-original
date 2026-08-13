@@ -99,7 +99,7 @@ Recorded during test development. These are the **values we entered** that made 
 **Commands:**
 
 ```
-node uat/headless-login.mjs                       # one-time: capture admin session
+node uat/capture-session.mjs                       # one-time: capture admin session (interactive CAS login)
 PATH="$PATH" npx playwright test --config=uat/playwright.config.js           # all UAT specs
 PATH="$PATH" npx playwright test --config=uat/playwright-nosession.config.js # anonymous-only probes
 ```
