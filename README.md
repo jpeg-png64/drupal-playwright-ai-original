@@ -5,6 +5,8 @@
 3. Run the requested spec with those values.
 4. For UAT, use the UAT config and saved UAT storage state.
 
+If you want to learn the publish flow first, read `uat/publish-image.spec.js` — it shows the shortest working path to add one block, publish the page, and verify the frontend.
+
 # Drupal Playwright Automation — Quick Start
 
 Two workflows:
@@ -118,4 +120,3 @@ See results/views-autofill-list.md for an example result output.
 2. Ask for a one-time login link or a saved `STORAGE_STATE` file.
 3. Run the requested spec with those values.
 4. For UAT, use the UAT config and saved UAT storage state.
-
