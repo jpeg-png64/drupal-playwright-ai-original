@@ -51,6 +51,14 @@ PATH="$PATH" npx playwright test --config=uat/playwright.config.js views-display
 PATH="$PATH" npx playwright test --config=uat/playwright.config.js zz-all-blocks
 ```
 
+Recommended UAT examples:
+- `uat/publish-image.spec.js`
+- `uat/publish-accordion.spec.js`
+- `uat/publish-two-blocks.spec.js`
+- `uat/delete-created-pages.spec.js`
+
+Use `spec.js` first; shell is only a backup for quick one-off checks.
+
 ## Reports and artifacts
 
 - Main suite HTML report: `npm run report` (opens `test-results/html-report`); failure artifacts in `test-results/artifacts/`
