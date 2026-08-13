@@ -52,10 +52,9 @@ Exact inputs per block are documented in [`../docs/test-inputs/`](../docs/test-i
 
 ## Failures encountered & root causes
 
-| `edit saved page` — expanding any section with a ckeditor block (Text Area, Accordion) returns Drupal "Oops" (500) | ckeditor paragraph-render AJAX 500s on UAT in every context (add + edit) | Backend bug; workaround — edit non-ckeditor fields (title), add new sections/blocks only |
-
 | Failure                                                                                                 | Cause                                                                                            | Fix                                              |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `edit saved page` — expanding any section with a ckeditor block (Text Area, Accordion) returns Drupal "Oops" (500) | ckeditor paragraph-render AJAX 500s on UAT in every context (add + edit) | Backend bug; workaround — edit non-ckeditor fields (title), add new sections/blocks only |
 | `all-blocks` — media modal never appeared; YouTube field not visible; image-grid `selectOption` timeout | Running solo + parallel projects **concurrently** → 2 heavy Drupal submissions collided          | Projects run **sequentially** now — 3 phases via `dependencies` (parallel → solo → combined), so `@combined` always runs last on a solo worker |
 | `event-carousel` "All configurable fields" (flaky, 1×)                                                  | "Add Events Carousel Block" click intercepted by the "Add 1-Column Section" button (DOM overlap) | Passed on retry; no code change                  |
 | `image-grid` "Three Images + Fade" (flaky, 1×)                                                          | "Add Image Grid Block" not visible within 5s during concurrent run                               | Passed on retry; resolved by sequential projects |
@@ -108,6 +107,8 @@ PATH="$PATH" npx playwright test --config=uat/playwright-nosession.config.js # a
 
 **Blocks (16/16): PASS** — Text Area, Icon & Text Highlight, Accordion, Events Carousel, 3-Column Carousel, Page Title, Navigation Menu, Next & Previous, Image, Video (iframe embed), Youtube, Image Grid, Slideshow, Views, Profile Listing, Profile Details. Full status and per-route detail in `UAT-BLOCK-HEALTH.txt`.
 
+**Re-verified 2026-08-13:** `uat/zz-all-blocks.spec.js` (all 16 blocks on one page, Views = Events → Block display) passed on builder-clean in ~2.7 min.
+
 `uat/block-build.spec.js` (2026-08-12): Page Title, Accordion, Text Area, Image blocks all build on a draft Standard Page with **no server 500** — Accordion, previously a known 500 on older UAT builds, now passes. Draft page deliberately not published.
 
 ### Known UAT issues (real bugs, need code fix)
@@ -127,4 +128,4 @@ Dblog (`/admin/reports/dblog?type[]=php`) is the source of truth for the actual 
 
 ### UAT admin walkthrough
 
-`../uat/UAT-ADMIN-OVERVIEW.md` — plain-language overview of the MTPC Administration area (content, structure, people, events sync, multimedia, roles, standard Drupal admin), plus the `builder-clean` vs `callitso` differences. `views-autofill-list.md` — the 42 Views autocomplete entries discovered by `uat/views-display.spec.js`.
+`../uat/UAT-ADMIN-OVERVIEW.md` — plain-language overview of the MTPC Administration area (content, structure, people, events sync, multimedia, roles, standard Drupal admin), plus the `builder-clean` vs `callitso` differences. `views-autofill-list.md` — the 42 Views autocomplete entries discovered by `uat/views-display.spec.js`; per-view Display dropdown options were probed fresh-page-per-view by `uat/views-list-probe.spec.js`. Result: **8 views expose block display options** (Events, Document Library, External Media Listing Filter Form, Multimedia - Photo Gallery, News, News Block, News Category Taxonomy, News Sidebar), the rest either show `- Select -` only or have no Display dropdown.
