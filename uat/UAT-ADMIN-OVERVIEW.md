@@ -8,7 +8,7 @@
 
 This doc is a plain-language walkthrough of the admin area ("MTPC Administration").
 It is a basic overview of what each part is for — not an exhaustive field-by-field
-reference. For health/failure details see `UAT-BLOCK-HEALTH.txt`.
+reference. For health/failure details see `../results/UAT-BLOCK-HEALTH.txt`.
 
 ---
 
@@ -166,4 +166,4 @@ Some areas are only reachable by URL (they exist but aren't in the top bar menu)
 ## 4. Health status
 
 Test coverage and known failures are documented separately in
-`UAT-BLOCK-HEALTH.txt` — this overview deliberately keeps no pass/fail detail.
+`../results/UAT-BLOCK-HEALTH.txt` — this overview deliberately keeps no pass/fail detail.

@@ -1,6 +1,9 @@
 # Drupal Playwright Automation
 
-Playwright E2E tests for 16 Drupal custom blocks (32 tests across 19 spec files). Generated and maintained with AI assistance.
+Two workflows:
+
+1. **Block suite** — Playwright E2E tests for 16 Drupal custom blocks (32 tests across 19 spec files). Generated and maintained with AI assistance.
+2. **UAT probes** (`uat/`) — site health checks against the UAT build (`builder-clean.docker-uat01.ust.hk`): route crawls, anonymous access probes, and block build checks.
 
 ## TL;DR
 
@@ -68,6 +71,49 @@ Working with an AI agent (e.g. opencode)? Just ask it to run a test — e.g. "te
 
 You can also update `docs/test-inputs/<block>.md` yourself and ask the agent to "apply the inputs to the test".
 
+## UAT Site Workflow (builder-clean)
+
+Separate from the block suite, `uat/` holds health probes for the UAT build at
+`https://builder-clean.docker-uat01.ust.hk` (basic-auth protected).
+
+### One-time session capture
+
+```bash
+node uat/headless-login.mjs    # headless login with the helper account → .auth/storage-state-builder-clean.json
+node uat/capture-session.mjs   # opens a browser for interactive CAS login (real admin user), saves the same file
+node uat/inspect-login.mjs     # debug: dumps the login form fields on the UAT site
+```
+
+### Run the probes
+
+```bash
+# All UAT specs (uses .auth/storage-state-builder-clean.json)
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js
+
+# Anonymous-only probes (no Drupal session — verifies admin lockdown)
+PATH="$PATH" npx playwright test --config=uat/playwright-nosession.config.js
+
+# One probe at a time
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js block-build
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js route-crawl
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js views-display
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js zz-all-blocks
+```
+
+### What each UAT spec does
+
+| Spec | Needs session | What it checks |
+|------|---------------|----------------|
+| `public-crawl.spec.js` | no | BFS-crawls public pages + known endpoint probes, flags 5xx / error pages |
+| `probe-nosession.spec.js` | no | Confirms admin routes are locked down with no Drupal session |
+| `probe-content.spec.js` | no | Dumps body content of suspicious admin 200s |
+| `route-crawl.spec.js` | yes | Crawls ~90 admin/content-type routes, sitemap URLs, and dblog for 5xx/errors |
+| `block-build.spec.js` | yes | Builds Page Title / Accordion / Text Area / Image blocks on a draft Standard Page (never publishes) |
+| `views-display.spec.js` | yes | Probes the Views autocomplete → Display dropdown for every view |
+| `zz-all-blocks.spec.js` | yes | Adds all 16 blocks on one Standard Page, publishes, verifies frontend |
+
+UAT reports: `uat/test-results/html-report-uat/`. UAT docs: `uat/UAT-ADMIN-OVERVIEW.md`, `results/UAT-BLOCK-HEALTH.txt`, `results/views-autofill-list.md`.
+
 ## Project Structure
 
 ```
@@ -89,19 +135,28 @@ You can also update `docs/test-inputs/<block>.md` yourself and ask the agent to 
 │   ├── stress-block-variety.spec.js  Many block types (@combined)
 │   ├── stress-content-volume.spec.js Large text and complex content (@combined)
 │   └── stress-size-extremes.spec.js  Boundary dimensions (@combined)
-├── manual/                   Human-facing docs (README, USAGE, TEST-REPORT)
+├── manual/                   Human-facing docs (README, USAGE)
+├── uat/                      UAT site probes (builder-clean) — separate config + specs
+│   ├── playwright.config.js          Session-based UAT config (admin session, basic auth)
+│   ├── playwright-nosession.config.js Anonymous-only UAT config (no storage state)
+│   ├── headless-login.mjs / capture-session.mjs / inspect-login.mjs
+│   ├── <crawl|probe|block-build|views-display|zz-all-blocks>.spec.js
+│   ├── UAT-ADMIN-OVERVIEW.md
+│   └── test-results/                  UAT artifacts (html-report-uat)
+├── results/                  Result/output documents (reports, health, probe findings)
 ├── playwright.config.js
 ├── package.json
 └── AGENTS.md                AI agent instructions
 ```
 
-## Drupal Site
+## Drupal Sites
 
 | Property | Value |
 |----------|-------|
-| URL | `http://localhost:8325` |
+| Block suite URL | `http://localhost:8325` (local Docker) or any remote site via `BASE_URL` |
+| UAT site | `https://builder-clean.docker-uat01.ust.hk` (basic-auth protected; admin session in `.auth/storage-state-builder-clean.json`) |
 | Content type | `/node/add/custom_page/mtpc` |
-| Login | Provided login link (session cached in storage state; no `drush uli`) |
+| Login | Provided login link (session cached in storage state; no `drush uli`) or UAT session scripts (`uat/headless-login.mjs` / `uat/capture-session.mjs`) |
 | Title field | `getByRole("textbox", { name: "Page Title" })` |
 | Publish button | `getByRole("button", { name: "Publish Page" })` |
 
@@ -294,13 +349,15 @@ Always collapse after configuring a block before adding the next one.
 
 ## Reports
 
-Test reports are generated in `test-results/html-report/` (open with `npm run report`). Failure artifacts (screenshots, traces) go to `test-results/artifacts/`.
+Main suite reports are generated in `test-results/html-report/` (open with `npm run report`). Failure artifacts (screenshots, traces) go to `test-results/artifacts/`. UAT reports go to `uat/test-results/html-report-uat/`.
 
 ## Further Reading
 
-- `USAGE.md` — How to run tests, add new tests, and read results
-- `TEST-REPORT.md` — Block-by-block test report and failure history
+- `USAGE.md` — How to run both workflows, add new tests, and read results
+- `../results/TEST-REPORT.md` — Block-by-block test report and failure history
 - `../docs/test-inputs/` — Exact input values used by every test
 - `AGENTS.md` — Full AI agent instructions and conventions
 - `../docs/explore-new-site.md` — Universal exploration workflow for new Drupal sites
 - `../docs/block-profiles/` — Quick reference for each block's selectors and fields
+- `../uat/UAT-ADMIN-OVERVIEW.md` — UAT admin walkthrough
+- `../results/UAT-BLOCK-HEALTH.txt` — UAT site health status per block/route

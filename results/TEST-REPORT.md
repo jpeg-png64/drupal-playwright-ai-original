@@ -89,3 +89,42 @@ Recorded during test development. These are the **values we entered** that made 
 | Image Grid      | 4 colors: borderColor, captionBgColor, captionTextColor, captionTextHover                                 |
 | Event Carousel  | per-item Active checkbox, block-level Show Ongoing                                                       |
 | Slideshow       | autoplay, infinite, fade, arrows, adaptiveHeight, cssClasses + per-slide link/target/8 line-style fields |
+
+---
+
+## UAT Report (builder-clean)
+
+**Site:** https://builder-clean.docker-uat01.ust.hk — the refreshed UAT build. Probes run from `uat/` with their own config; the block suite above does **not** target this site.
+
+**Commands:**
+
+```
+node uat/headless-login.mjs                       # one-time: capture admin session
+PATH="$PATH" npx playwright test --config=uat/playwright.config.js           # all UAT specs
+PATH="$PATH" npx playwright test --config=uat/playwright-nosession.config.js # anonymous-only probes
+```
+
+### Block health
+
+**Blocks (16/16): PASS** — Text Area, Icon & Text Highlight, Accordion, Events Carousel, 3-Column Carousel, Page Title, Navigation Menu, Next & Previous, Image, Video (iframe embed), Youtube, Image Grid, Slideshow, Views, Profile Listing, Profile Details. Full status and per-route detail in `UAT-BLOCK-HEALTH.txt`.
+
+`uat/block-build.spec.js` (2026-08-12): Page Title, Accordion, Text Area, Image blocks all build on a draft Standard Page with **no server 500** — Accordion, previously a known 500 on older UAT builds, now passes. Draft page deliberately not published.
+
+### Known UAT issues (real bugs, need code fix)
+
+| Route / area | Error |
+|--------------|-------|
+| `/admin/event-registration/overview` | HTTP 500 — `ksort` TypeError (flips_core) |
+| `/admin/config/people/otp` | HTTP 500 — ArgumentCountError (OTP module) |
+| Video/Youtube frontend `/ajax/load_video/{nid}` | PHP deprecation: `str_replace(): Passing null to parameter #3` in `mtpcbuild_thm\RenderVideo->render()`; dynamic property deprecations in `mtpcbuild_sw\UserLocation` |
+| Missing assets | `/sites/default/files/2024-01/bg_light_blue.png`(.jpg), `/themes/misc/menu-expanded.png` (404) |
+
+Dblog (`/admin/reports/dblog?type[]=php`) is the source of truth for the actual exception messages — the site shows only a generic "unexpected error" page.
+
+### Anonymous probes
+
+`public-crawl.spec.js` (BFS crawl + endpoint probes) and `probe-nosession.spec.js` confirm admin/content routes are locked down with no Drupal session; a full top-bar/header sweep found **195 of 196 internal links OK**, the single failure being `/admin/config/people/otp` (500, listed above).
+
+### UAT admin walkthrough
+
+`../uat/UAT-ADMIN-OVERVIEW.md` — plain-language overview of the MTPC Administration area (content, structure, people, events sync, multimedia, roles, standard Drupal admin), plus the `builder-clean` vs `callitso` differences. `views-autofill-list.md` — the 42 Views autocomplete entries discovered by `uat/views-display.spec.js`.
