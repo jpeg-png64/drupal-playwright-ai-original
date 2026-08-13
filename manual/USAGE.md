@@ -1,68 +1,116 @@
-# Usage
+# Usage (Procedure Runbook)
 
-Two workflows. Shared prereqs:
+This is the full step-by-step procedure. Keep root `README.md` as the quick start.
+
+## 1. Before you run
+
 - Node.js 18+
-- Playwright installed (`npx playwright install`)
+- Install dependencies:
 
-## Workflow A — Block suite (any Drupal site)
-
-Prereqs:
-- A reachable Drupal site (`BASE_URL`)
-
-Setup:
-```
+```bash
 npm install
 npx playwright install
 ```
 
-Capture login (one-time):
-- Option A: Let the agent open your `LOGIN_LINK` and save `.auth/storage-state.json` when you finish login and press ENTER.
-- Option B: Manually capture storage state using a short Playwright script and save as `.auth/storage-state.json`.
+- Required env:
+  - `BASE_URL` (target Drupal site)
+  - `STORAGE_STATE` (saved session JSON), or a one-time `LOGIN_LINK` to capture it
 
-Run:
-```
-Full suite: PATH="/usr/local/bin:$PATH" npx playwright test
-Single spec: BASE_URL="https://your-site" STORAGE_STATE=".auth/storage-state.json" PATH="$PATH" npx playwright test tests/image.spec.js
-```
+## 2. First run (quick success path)
 
-## Workflow B — UAT probes (builder-clean)
+Run one known working spec first:
 
-Prereqs:
-- Access to `https://builder-clean.docker-uat01.ust.hk` (basic-auth protected)
-- A captured admin session at `.auth/storage-state-builder-clean.json`
-
-Capture the session (one-time):
-```
-node uat/capture-session.mjs   # interactive browser (CAS) login as the real admin user
+```bash
+BASE_URL="https://your-site" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" npx playwright test tests/image.spec.js
 ```
 
-Run:
-```
-# All UAT specs (session-based)
-PATH="$PATH" npx playwright test --config=uat/playwright.config.js
+If you only have a login link, capture once, then rerun:
 
-# Anonymous-only probes (verifies admin lockdown with no Drupal session)
-PATH="$PATH" npx playwright test --config=uat/playwright-nosession.config.js
-
-# One probe at a time
-PATH="$PATH" npx playwright test --config=uat/playwright.config.js block-build
-PATH="$PATH" npx playwright test --config=uat/playwright.config.js route-crawl
-PATH="$PATH" npx playwright test --config=uat/playwright.config.js views-display
-PATH="$PATH" npx playwright test --config=uat/playwright.config.js zz-all-blocks
+```bash
+BASE_URL="https://your-site" LOGIN_LINK="https://your-one-time-login-link" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" npx playwright test tests/image.spec.js
 ```
 
-Recommended UAT examples:
+## 3. Create one block (spec.js-first workflow)
+
+Procedure:
+1. Read `docs/block-profiles/<block>.md`
+2. Read `docs/test-inputs/<block>.md`
+3. Check `helpers/<block>.js` signature
+4. Run the target spec
+
+Example:
+
+```bash
+BASE_URL="https://your-site" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" npx playwright test tests/accordion.spec.js
+```
+
+## 4. Create two blocks on one page
+
+Use the existing example:
+
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test uat/publish-two-blocks.spec.js --config=uat/playwright.config.js
+```
+
+## 5. Publish and verify frontend
+
+Recommended publish examples:
 - `uat/publish-image.spec.js`
 - `uat/publish-accordion.spec.js`
 - `uat/publish-two-blocks.spec.js`
-- `uat/delete-created-pages.spec.js`
 
-Use `spec.js` first; shell is only a backup for quick one-off checks.
+Run one example:
 
-## Reports and artifacts
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test uat/publish-image.spec.js --config=uat/playwright.config.js
+```
 
-- Main suite HTML report: `npm run report` (opens `test-results/html-report`); failure artifacts in `test-results/artifacts/`
-- UAT HTML report: `uat/test-results/html-report-uat/`; UAT artifacts in `uat/test-results/artifacts/`
-- UAT findings: `uat/UAT-ADMIN-OVERVIEW.md` (admin walkthrough), `results/UAT-BLOCK-HEALTH.txt` (health status)
+## 6. Optional cleanup (user decides)
 
-If unsure, read `docs/` for block profiles and exact test inputs before editing tests.
+Cleanup is never automatic. Run only when you explicitly want deletion:
+
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test uat/delete-created-pages.spec.js --config=uat/playwright.config.js
+```
+
+## 7. Shell fallback (supplementary)
+
+Use shell only for quick probing (top bar, Reports, Recent log messages).  
+Primary workflow stays `spec.js`.
+
+## 8. UAT procedure (builder-clean)
+
+Prereqs:
+- Access to `https://builder-clean.docker-uat01.ust.hk` (basic auth)
+- Captured admin session at `.auth/storage-state-builder-clean.json`
+
+Capture once:
+
+```bash
+node uat/capture-session.mjs
+```
+
+Run UAT suite:
+
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test --config=uat/playwright.config.js
+```
+
+Anonymous-only lockdown checks:
+
+```bash
+PATH="/usr/local/bin:$PATH" npx playwright test --config=uat/playwright-nosession.config.js
+```
+
+## 9. Troubleshooting
+
+- Missing `BASE_URL`: set it explicitly before running.
+- Session expired: recapture storage state with `LOGIN_LINK` flow or `uat/capture-session.mjs`.
+- Helper mismatch: re-check `helpers/<block>.js` before editing spec.
+- Media/modal flakiness: keep heavy tests tagged `@media-modal` or `@combined`.
+
+## 10. Reports and references
+
+- Main suite HTML report: `test-results/html-report/` (`npm run report`)
+- UAT HTML report: `uat/test-results/html-report-uat/`
+- UAT findings: `uat/UAT-ADMIN-OVERVIEW.md`, `results/UAT-BLOCK-HEALTH.txt`
