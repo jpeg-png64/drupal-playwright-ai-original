@@ -1,3 +1,10 @@
+# Start here
+
+1. Ask for `BASE_URL`.
+2. Ask for a one-time login link or a saved `STORAGE_STATE` file.
+3. Run the requested spec with those values.
+4. For UAT, use the UAT config and saved UAT storage state.
+
 # Drupal Playwright Automation — Quick Start
 
 Two workflows:
@@ -105,3 +112,10 @@ Notes:
 - For UAT with HTTP Basic, use the uat config which already includes httpCredentials and a pre-captured storage state.
 
 See results/views-autofill-list.md for an example result output.
+# Start here
+
+1. Ask for `BASE_URL`.
+2. Ask for a one-time login link or a saved `STORAGE_STATE` file.
+3. Run the requested spec with those values.
+4. For UAT, use the UAT config and saved UAT storage state.
+
