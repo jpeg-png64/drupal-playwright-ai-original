@@ -33,6 +33,16 @@ If you only have a login link, use the same command with `LOGIN_LINK` and let th
 - Read `helpers/<block>.js`
 - Keep `spec.js` as the main workflow
 
+
+## Token efficiency for AI CLI
+
+Start with the smallest possible read:
+- Read the exact block docs and helper you need.
+- Prefer the working example spec (`uat/publish-image.spec.js`, `uat/publish-accordion.spec.js`, `uat/publish-two-blocks.spec.js`) before searching broadly.
+- Do not scan the whole repo for a simple fix.
+- Stop as soon as the pattern is clear enough to write the next step.
+- Use `spec.js` first; shell is a backup, not the default workflow.
+
 ## UAT notes
 
 UAT uses:

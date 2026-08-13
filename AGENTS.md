@@ -14,3 +14,10 @@ Agent behavior:
 - Run interactive capture only when user consents and runs locally.
 - Keep replies short and give exact commands to run.
 
+
+
+## Token efficiency
+- Read the smallest set of files needed.
+- Prefer the example spec and one helper before broad searches.
+- Stop once the pattern is clear enough to act.
+- Use shell only for quick single checks, not as the default path.

@@ -16,3 +16,10 @@ Rules:
 Example run (single spec):
 BASE_URL="https://example.com" STORAGE_STATE=".auth/storage-state.json" PATH="/usr/local/bin:$PATH" npx playwright test tests/image.spec.js
 
+
+
+## Token efficiency
+- Read the smallest set of files needed.
+- Prefer the example spec and one helper before broad searches.
+- Stop once the pattern is clear enough to act.
+- Use shell only for quick single checks, not as the default path.

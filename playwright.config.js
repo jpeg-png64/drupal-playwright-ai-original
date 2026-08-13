@@ -35,6 +35,11 @@ export default defineConfig({
     headless: process.env.HEADLESS === "true" ? true : false,
     actionTimeout: 30000,
     navigationTimeout: 60000,
+    // Optional basic-auth for protected sites (set BASIC_AUTH_USER / BASIC_AUTH_PASS)
+    httpCredentials:
+      process.env.BASIC_AUTH_USER && process.env.BASIC_AUTH_PASS
+        ? { username: process.env.BASIC_AUTH_USER, password: process.env.BASIC_AUTH_PASS }
+        : undefined,
     // Allow overriding storage state path for per-user sessions
     storageState: process.env.STORAGE_STATE || ".auth/storage-state.json",
     screenshot: process.env.SCREENSHOT || "only-on-failure",
